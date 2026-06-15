@@ -1,0 +1,1979 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Tools Navigator | AI 도구 네비게이터</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6366f1',
+                        secondary: '#8b5cf6',
+                        accent: '#ec4899',
+                        dark: '#0f172a',
+                        darker: '#020617',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .text-gradient {
+                background-clip: text;
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+            .bg-glass {
+                backdrop-filter: blur(12px);
+                background-color: rgba(15, 23, 42, 0.7);
+            }
+            .card-hover {
+                transition: all 0.3s ease;
+            }
+            .card-hover:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 20px 25px -5px rgba(99, 102, 241, 0.1), 0 10px 10px -5px rgba(99, 102, 241, 0.04);
+            }
+            .search-result-hover {
+                transition: all 0.2s ease;
+            }
+            .search-result-hover:hover {
+                background-color: rgba(99, 102, 241, 0.1);
+            }
+            .filter-btn-active {
+                background-color: rgba(99, 102, 241, 0.2);
+                border-color: #6366f1;
+                color: #6366f1;
+            }
+            .highlighted {
+                background-color: rgba(99, 102, 241, 0.2);
+            }
+        }
+    </style>
+</head>
+<body class="bg-darker text-gray-100 min-h-screen font-sans">
+    <!-- 导航栏 -->
+    <nav class="fixed top-0 w-full z-50 bg-glass border-b border-gray-800">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <div class="w-10 h-10 rounded-lg bg-gradient-to-r from-primary to-secondary flex items-center justify-center">
+                    <i class="fa fa-rocket text-white text-xl"></i>
+                </div>
+                <h1 class="text-xl font-bold">AI Tools Navigator</h1>
+            </div>
+            
+            <div class="hidden md:flex items-center space-x-6">
+                <a href="#home" class="nav-link hover:text-primary transition-colors" data-i18n="nav.home">홈</a>
+                <a href="#tools" class="nav-link hover:text-primary transition-colors" data-i18n="nav.tools">AI 도구</a>
+                <a href="#myTools" class="nav-link hover:text-primary transition-colors" data-i18n="nav.myTools">내 도구</a>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <!-- 语言切换 -->
+                <div class="relative">
+                    <button id="langToggle" class="flex items-center space-x-1 px-3 py-1 rounded-lg border border-gray-700 hover:border-primary transition-colors">
+                        <i class="fa fa-globe"></i>
+                        <span id="currentLang">한국어</span>
+                        <i class="fa fa-chevron-down text-xs"></i>
+                    </button>
+                    <div id="langMenu" class="absolute right-0 mt-2 w-36 bg-dark border border-gray-700 rounded-lg shadow-xl hidden">
+                        <button class="w-full text-left px-4 py-2 hover:bg-gray-800 rounded-t-lg" data-lang="ko">한국어</button>
+                        <button class="w-full text-left px-4 py-2 hover:bg-gray-800" data-lang="zh">中文</button>
+                        <button class="w-full text-left px-4 py-2 hover:bg-gray-800 rounded-b-lg" data-lang="en">English</button>
+                    </div>
+                </div>
+                
+                <button id="mobileMenuBtn" class="md:hidden">
+                    <i class="fa fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <main class="pt-24 pb-16">
+        <!-- 英雄区 -->
+        <section id="home" class="container mx-auto px-4 mb-16">
+            <div class="max-w-4xl mx-auto text-center">
+                <h2 class="text-[clamp(2rem,5vw,3.5rem)] font-bold mb-8">
+                    <span class="text-gradient bg-gradient-to-r from-primary via-secondary to-accent" data-i18n="hero.title">AI 도구를 찾는 가장 스마트한 방법</span>
+                </h2>
+                
+                <!-- 智能搜索框 -->
+                <div class="relative max-w-2xl mx-auto mb-4">
+                    <div class="relative">
+                        <i class="fa fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg"></i>
+                        <input 
+                            type="text" 
+                            id="searchInput" 
+                            class="w-full pl-12 pr-4 py-4 rounded-xl bg-dark border border-gray-700 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 text-lg transition-all"
+                            data-i18n-placeholder="hero.searchPlaceholder"
+                            placeholder="搜索AI工具名称或功能..."
+                        >
+                    </div>
+                    
+                    <!-- 搜索结果下拉框 -->
+                    <div id="searchResults" class="absolute top-full left-0 right-0 mt-2 bg-dark border border-gray-700 rounded-xl shadow-xl overflow-hidden hidden z-50">
+                        <!-- 搜索结果将在这里动态生成 -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 热门工具区 -->
+        <section id="personalizedSection" class="container mx-auto px-4 mb-16">
+            <h3 class="text-2xl font-bold mb-6" data-i18n="personalized.title">인기 도구</h3>
+            <div id="personalizedTools" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- 热门工具将在这里动态生成 -->
+            </div>
+        </section>
+
+        <!-- AI工具分类展示 -->
+        <section id="tools" class="container mx-auto px-4 mb-16">
+            <!-- 新增：筛选栏 -->
+            <div class="mb-8 p-4 bg-dark rounded-xl border border-gray-700">
+                <div class="flex flex-wrap gap-4 items-center">
+                    <!-- 价格筛选 -->
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm text-gray-400" data-i18n="filters.price">价格：</span>
+                        <div class="flex flex-wrap gap-2" id="priceFilters">
+                            <button class="filter-btn px-3 py-1 rounded-lg border border-gray-600 text-sm transition-colors filter-btn-active" data-price="all" data-i18n="filters.all">全部</button>
+                            <button class="filter-btn px-3 py-1 rounded-lg border border-gray-600 text-sm transition-colors" data-price="free" data-i18n="filters.free">免费</button>
+                            <button class="filter-btn px-3 py-1 rounded-lg border border-gray-600 text-sm transition-colors" data-price="freemium" data-i18n="filters.freemium">免费增值</button>
+                            <button class="filter-btn px-3 py-1 rounded-lg border border-gray-600 text-sm transition-colors" data-price="paid" data-i18n="filters.paid">付费</button>
+                            <button class="filter-btn px-3 py-1 rounded-lg border border-gray-600 text-sm transition-colors" data-price="coming" data-i18n="filters.coming">即将推出</button>
+                        </div>
+                    </div>
+                    
+                    <!-- 难度筛选 -->
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm text-gray-400" data-i18n="filters.difficulty">难度：</span>
+                        <div class="flex flex-wrap gap-2" id="difficultyFilters">
+                            <button class="filter-btn px-3 py-1 rounded-lg border border-gray-600 text-sm transition-colors filter-btn-active" data-difficulty="all" data-i18n="filters.all">全部</button>
+                            <button class="filter-btn px-3 py-1 rounded-lg border border-gray-600 text-sm transition-colors" data-difficulty="easy" data-i18n="filters.easy">简单</button>
+                            <button class="filter-btn px-3 py-1 rounded-lg border border-gray-600 text-sm transition-colors" data-difficulty="medium" data-i18n="filters.medium">中等</button>
+                            <button class="filter-btn px-3 py-1 rounded-lg border border-gray-600 text-sm transition-colors" data-difficulty="hard" data-i18n="filters.hard">困难</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 文本生成分类 -->
+            <div class="mb-12">
+                <div class="flex items-center mb-6">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center mr-4">
+                        <i class="fa fa-file-text text-white text-xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold" data-i18n="categories.text">텍스트 생성</h3>
+                </div>
+                <div id="textTools" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- 文本工具将在这里动态生成 -->
+                </div>
+            </div>
+
+            <!-- 图像生成分类 -->
+            <div class="mb-12">
+                <div class="flex items-center mb-6">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-r from-purple-500 to-pink-600 flex items-center justify-center mr-4">
+                        <i class="fa fa-image text-white text-xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold" data-i18n="categories.image">이미지 생성</h3>
+                </div>
+                <div id="imageTools" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- 图像工具将在这里动态生成 -->
+                </div>
+            </div>
+
+            <!-- 视频生成分类 -->
+            <div class="mb-12">
+                <div class="flex items-center mb-6">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-r from-red-500 to-orange-600 flex items-center justify-center mr-4">
+                        <i class="fa fa-video text-white text-xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold" data-i18n="categories.video">비디오 생성</h3>
+                </div>
+                <div id="videoTools" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- 视频工具将在这里动态生成 -->
+                </div>
+            </div>
+
+            <!-- 代码生成分类 -->
+            <div class="mb-12">
+                <div class="flex items-center mb-6">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-r from-green-500 to-teal-600 flex items-center justify-center mr-4">
+                        <i class="fa fa-code text-white text-xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold" data-i18n="categories.code">코드 생성</h3>
+                </div>
+                <div id="codeTools" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- 代码工具将在这里动态生成 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- 我的工作区 -->
+        <section id="myTools" class="container mx-auto px-4 mb-16">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold" data-i18n="workspaces.title">내 작업 공간</h3>
+                <button id="addWorkspaceBtn" class="px-4 py-2 rounded-lg border border-gray-700 hover:border-primary transition-colors">
+                    <i class="fa fa-plus mr-2"></i>
+                    <span data-i18n="workspaces.add">작업 공간 추가</span>
+                </button>
+            </div>
+            
+            <div id="workspacesContainer" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- 默认工作区 -->
+                <div class="bg-dark rounded-xl border border-gray-700 p-6 card-hover">
+                    <div class="flex justify-between items-start mb-4">
+                        <h4 class="text-lg font-semibold" data-i18n="workspaces.default">기본 작업 공간</h4>
+                        <div class="flex space-x-2">
+                            <button class="text-gray-400 hover:text-primary transition-colors edit-workspace" data-id="1">
+                                <i class="fa fa-edit"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <p class="text-gray-400 mb-4" data-i18n="workspaces.defaultDesc">즐겨찾는 도구를 모아보세요</p>
+                    <div id="defaultFavorites" class="space-y-2">
+                        <p class="text-gray-500 text-sm" data-i18n="workspaces.empty">아직 즐겨찾는 도구가 없습니다</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 工作区选择模态框 -->
+    <div id="workspaceSelectorModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center hidden">
+        <div class="bg-dark rounded-2xl p-8 max-w-md w-full mx-4 border border-gray-700">
+            <h3 class="text-2xl font-bold mb-2 text-center" data-i18n="workspaceSelector.title">작업 공간 선택</h3>
+            <p class="text-gray-400 mb-6 text-center" data-i18n="workspaceSelector.subtitle">이 도구를 추가할 작업 공간을 선택하세요</p>
+            
+            <div id="workspaceList" class="space-y-3 mb-6 max-h-60 overflow-y-auto">
+                <!-- 工作区列表将在这里动态生成 -->
+            </div>
+            
+            <div class="flex space-x-3">
+                <button id="cancelWorkspaceBtn" class="flex-1 py-3 rounded-lg border border-gray-700 hover:border-gray-500 transition-colors" data-i18n="workspaceSelector.cancel">취소</button>
+                <button id="confirmWorkspaceBtn" class="flex-1 py-3 rounded-lg bg-gradient-to-r from-primary to-secondary text-white font-medium" data-i18n="workspaceSelector.confirm">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 多语言数据
+        const translations = {
+            ko: {
+                nav: { home: "홈", tools: "AI 도구", myTools: "내 도구" },
+                hero: { title: "AI 도구를 찾는 가장 스마트한 방법", searchPlaceholder: "AI 도구 이름 또는 기능을 검색하세요..." },
+                personalized: { title: "인기 도구" },
+                categories: { title: "모든 카테고리", tools: "개의 도구", text: "텍스트 생성", image: "이미지 생성", video: "비디오 생성", code: "코드 생성" },
+                workspaces: { title: "내 작업 공간", add: "작업 공간 추가", default: "기본 작업 공간", defaultDesc: "즐겨찾는 도구를 모아보세요", empty: "아직 즐겨찾는 도구가 없습니다", enterName: "작업 공간 이름을 입력하세요:", confirmDelete: "정말 이 작업 공간을 삭제하시겠습니까?", tools: "개의 도구" },
+                tool: { 
+                    freeFeatures: "무료 기능", 
+                    paidFeatures: "유료 기능", 
+                    rating: "평점", 
+                    ratingDesc: "기능완성도 40% + 사용편의성 30% + 사용자만족도 30%", 
+                    visit: "방문하기",
+                    mainFeatures: "주요 기능",
+                    favorite: "즐겨찾기",
+                    unfavorite: "즐겨찾기 취소",
+                    price: { free: "무료", paid: "유료", freemium: "무료+유료", coming: "출시 예정" },
+                    difficulty: { easy: "쉬움", medium: "보통", hard: "어려움" }
+                },
+                workspaceSelector: {
+                    title: "작업 공간 선택",
+                    subtitle: "이 도구를 추가할 작업 공간을 선택하세요",
+                    confirm: "확인",
+                    cancel: "취소",
+                    noWorkspaces: "사용 가능한 작업 공간이 없습니다"
+                },
+                search: {
+                    noResults: "검색 결과가 없습니다",
+                    didYouMean: "혹시 찾으시는 게 이것인가요?",
+                    searchHistory: "검색 기록",
+                    hotSearches: "인기 검색",
+                    clearHistory: "지우기",
+                    filter: "필터"
+                },
+                filters: {
+                    price: "가격：",
+                    difficulty: "난이도：",
+                    all: "전체",
+                    free: "무료",
+                    freemium: "무료+유료",
+                    paid: "유료",
+                    coming: "출시 예정",
+                    easy: "쉬움",
+                    medium: "보통",
+                    hard: "어려움"
+                }
+            },
+            zh: {
+                nav: { home: "首页", tools: "AI工具", myTools: "我的工具" },
+                hero: { title: "寻找AI工具的最智能方式", searchPlaceholder: "搜索AI工具名称或功能..." },
+                personalized: { title: "热门工具" },
+                categories: { title: "全部分类", tools: "个工具", text: "文本生成", image: "图像生成", video: "视频生成", code: "代码生成" },
+                workspaces: { title: "我的工作区", add: "添加工作区", default: "默认工作区", defaultDesc: "收藏您喜欢的工具", empty: "还没有收藏的工具", enterName: "请输入工作区名称：", confirmDelete: "确定要删除这个工作区吗？", tools: "个工具" },
+                tool: { 
+                    freeFeatures: "免费功能", 
+                    paidFeatures: "付费功能", 
+                    rating: "评分", 
+                    ratingDesc: "功能完整性 40% + 使用便捷性 30% + 用户满意度 30%", 
+                    visit: "访问官网",
+                    mainFeatures: "主要功能",
+                    favorite: "收藏",
+                    unfavorite: "取消收藏",
+                    price: { free: "免费", paid: "付费", freemium: "免费增值", coming: "即将推出" },
+                    difficulty: { easy: "简单", medium: "中等", hard: "困难" }
+                },
+                workspaceSelector: {
+                    title: "选择工作区",
+                    subtitle: "选择要添加此工具的工作区",
+                    confirm: "确认",
+                    cancel: "取消",
+                    noWorkspaces: "没有可用的工作区"
+                },
+                search: {
+                    noResults: "没有找到相关工具",
+                    didYouMean: "您是不是要找：",
+                    searchHistory: "搜索历史",
+                    hotSearches: "热门搜索",
+                    clearHistory: "清除",
+                    filter: "筛选"
+                },
+                filters: {
+                    price: "价格：",
+                    difficulty: "难度：",
+                    all: "全部",
+                    free: "免费",
+                    freemium: "免费增值",
+                    paid: "付费",
+                    coming: "即将推出",
+                    easy: "简单",
+                    medium: "中等",
+                    hard: "困难"
+                }
+            },
+            en: {
+                nav: { home: "Home", tools: "AI Tools", myTools: "My Tools" },
+                hero: { title: "The Smartest Way to Find AI Tools", searchPlaceholder: "Search AI tool name or feature..." },
+                personalized: { title: "Popular Tools" },
+                categories: { title: "All Categories", tools: "tools", text: "Text Generation", image: "Image Generation", video: "Video Generation", code: "Code Generation" },
+                workspaces: { title: "My Workspaces", add: "Add Workspace", default: "Default Workspace", defaultDesc: "Collect your favorite tools", empty: "No favorite tools yet", enterName: "Enter workspace name:", confirmDelete: "Are you sure you want to delete this workspace?", tools: "tools" },
+                tool: { 
+                    freeFeatures: "Free Features", 
+                    paidFeatures: "Paid Features", 
+                    rating: "Rating", 
+                    ratingDesc: "Functionality 40% + Usability 30% + User Satisfaction 30%", 
+                    visit: "Visit Site",
+                    mainFeatures: "Main Features",
+                    favorite: "Favorite",
+                    unfavorite: "Unfavorite",
+                    price: { free: "Free", paid: "Paid", freemium: "Freemium", coming: "Coming Soon" },
+                    difficulty: { easy: "Easy", medium: "Medium", hard: "Hard" }
+                },
+                workspaceSelector: {
+                    title: "Select Workspaces",
+                    subtitle: "Select workspaces to add this tool to",
+                    confirm: "Confirm",
+                    cancel: "Cancel",
+                    noWorkspaces: "No available workspaces"
+                },
+                search: {
+                    noResults: "No matching tools found",
+                    didYouMean: "Did you mean:",
+                    searchHistory: "Search History",
+                    hotSearches: "Hot Searches",
+                    clearHistory: "Clear",
+                    filter: "Filter"
+                },
+                filters: {
+                    price: "Price:",
+                    difficulty: "Difficulty:",
+                    all: "All",
+                    free: "Free",
+                    freemium: "Freemium",
+                    paid: "Paid",
+                    coming: "Coming Soon",
+                    easy: "Easy",
+                    medium: "Medium",
+                    hard: "Hard"
+                }
+            }
+        };
+
+        // AI工具数据库
+        const aiTools = [
+            // 文本生成工具
+            { 
+                id: 1, 
+                name: "ChatGPT", 
+                url: "https://chat.openai.com",
+                category: "text", 
+                features: {
+                    ko: ["대화형 AI", "텍스트 생성", "번역", "코드 작성", "문서 요약"],
+                    zh: ["对话式AI", "文本生成", "翻译", "代码编写", "文档摘要"],
+                    en: ["Conversational AI", "Text Generation", "Translation", "Code Writing", "Document Summarization"]
+                },
+                freeFeatures: {
+                    ko: ["GPT-3.5 기본 모델", "일일 제한 쿼리", "기본 대화 기능"],
+                    zh: ["GPT-3.5基础模型", "每日限制查询", "基础对话功能"],
+                    en: ["GPT-3.5 Basic Model", "Daily Query Limit", "Basic Chat Features"]
+                },
+                paidFeatures: {
+                    ko: ["GPT-4 고급 모델", "무제한 쿼리", "플러그인 지원", "DALL-E 3 통합"],
+                    zh: ["GPT-4高级模型", "无限查询", "插件支持", "DALL-E 3集成"],
+                    en: ["GPT-4 Advanced Model", "Unlimited Queries", "Plugin Support", "DALL-E 3 Integration"]
+                },
+                languages: ["ko", "zh", "en"], 
+                price: "freemium", 
+                threshold: "easy", 
+                rating: 4.8,
+                bgColor: "#74aa9c",
+                isFavorited: false
+            },
+            { 
+                id: 2, 
+                name: "Claude 3", 
+                url: "https://anthropic.com/claude",
+                category: "text", 
+                features: {
+                    ko: ["긴 문서 처리", "대화형 AI", "데이터 분석", "코드 작성", "200K 컨텍스트"],
+                    zh: ["长文档处理", "对话式AI", "数据分析", "代码编写", "200K上下文"],
+                    en: ["Long Document Processing", "Conversational AI", "Data Analysis", "Code Writing", "200K Context"]
+                },
+                freeFeatures: {
+                    ko: ["Claude 3 Haiku 모델", "일일 제한 쿼리", "기본 문서 처리"],
+                    zh: ["Claude 3 Haiku模型", "每日限制查询", "基础文档处理"],
+                    en: ["Claude 3 Haiku Model", "Daily Query Limit", "Basic Document Processing"]
+                },
+                paidFeatures: {
+                    ko: ["Claude 3 Opus/Sonnet", "무제한 컨텍스트", "기업용 API"],
+                    zh: ["Claude 3 Opus/Sonnet", "无限上下文", "企业API"],
+                    en: ["Claude 3 Opus/Sonnet", "Unlimited Context", "Enterprise API"]
+                },
+                languages: ["ko", "zh", "en"], 
+                price: "freemium", 
+                threshold: "easy", 
+                rating: 4.7,
+                bgColor: "#d97757",
+                isFavorited: false
+            },
+            { 
+                id: 3, 
+                name: "Gemini", 
+                url: "https://gemini.google.com",
+                category: "text", 
+                features: {
+                    ko: ["멀티모달 AI", "실시간 검색", "이미지 이해", "코드 지원"],
+                    zh: ["多模态AI", "实时搜索", "图像理解", "代码支持"],
+                    en: ["Multimodal AI", "Real-time Search", "Image Understanding", "Code Support"]
+                },
+                freeFeatures: {
+                    ko: ["Gemini 1.5 Flash", "일일 제한 쿼리", "기본 멀티모달"],
+                    zh: ["Gemini 1.5 Flash", "每日限制查询", "基础多模态"],
+                    en: ["Gemini 1.5 Flash", "Daily Query Limit", "Basic Multimodal"]
+                },
+                paidFeatures: {
+                    ko: ["Gemini 1.5 Pro", "무제한 쿼리", "고급 검색 기능"],
+                    zh: ["Gemini 1.5 Pro", "无限查询", "高级搜索功能"],
+                    en: ["Gemini 1.5 Pro", "Unlimited Queries", "Advanced Search Features"]
+                },
+                languages: ["ko", "zh", "en"], 
+                price: "freemium", 
+                threshold: "easy", 
+                rating: 4.7,
+                bgColor: "#4285f4",
+                isFavorited: false
+            },
+            { 
+                id: 4, 
+                name: "Doubao 豆包", 
+                url: "https://www.doubao.com",
+                category: "text", 
+                features: {
+                    ko: ["중국어 최적화", "멀티모달 AI", "한국어 지원", "대화형 AI", "코드 지원"],
+                    zh: ["中文优化", "多模态AI", "韩语支持", "对话式AI", "代码支持"],
+                    en: ["Chinese Optimized", "Multimodal AI", "Korean Support", "Conversational AI", "Code Support"]
+                },
+                freeFeatures: {
+                    ko: ["기본 모델 무료", "일일 무제한 쿼리", "기본 멀티모달"],
+                    zh: ["基础模型免费", "每日无限查询", "基础多模态"],
+                    en: ["Basic Model Free", "Daily Unlimited Queries", "Basic Multimodal"]
+                },
+                paidFeatures: {
+                    ko: ["고급 모델", "대용량 파일 처리", "API 접근"],
+                    zh: ["高级模型", "大文件处理", "API访问"],
+                    en: ["Advanced Model", "Large File Processing", "API Access"]
+                },
+                languages: ["ko", "zh", "en"], 
+                price: "freemium", 
+                threshold: "easy", 
+                rating: 4.6,
+                bgColor: "#0066ff",
+                isFavorited: false
+            },
+            { 
+                id: 5, 
+                name: "Naver Clova", 
+                url: "https://clova.ai",
+                category: "text", 
+                features: {
+                    ko: ["한국어 최적화", "음성 인식", "번역", "대화형 AI"],
+                    zh: ["韩语优化", "语音识别", "翻译", "对话式AI"],
+                    en: ["Korean Optimized", "Speech Recognition", "Translation", "Conversational AI"]
+                },
+                freeFeatures: {
+                    ko: ["기본 한국어 대화", "일일 제한 쿼리"],
+                    zh: ["基础韩语对话", "每日限制查询"],
+                    en: ["Basic Korean Chat", "Daily Query Limit"]
+                },
+                paidFeatures: {
+                    ko: ["기업용 API", "대량 처리", "커스텀 모델"],
+                    zh: ["企业API", "批量处理", "自定义模型"],
+                    en: ["Enterprise API", "Batch Processing", "Custom Model"]
+                },
+                languages: ["ko"], 
+                price: "freemium", 
+                threshold: "easy", 
+                rating: 4.3,
+                bgColor: "#03c75a",
+                isFavorited: false
+            },
+            { 
+                id: 6, 
+                name: "Kakao Brain", 
+                url: "https://brain.kakao.com",
+                category: "text", 
+                features: {
+                    ko: ["한국어 AI", "번역", "문서 요약", "대화"],
+                    zh: ["韩语AI", "翻译", "文档摘要", "对话"],
+                    en: ["Korean AI", "Translation", "Document Summarization", "Chat"]
+                },
+                freeFeatures: {
+                    ko: ["기본 API 테스트", "소규모 사용"],
+                    zh: ["基础API测试", "小规模使用"],
+                    en: ["Basic API Testing", "Small Scale Usage"]
+                },
+                paidFeatures: {
+                    ko: ["기업용 솔루션", "대량 처리"],
+                    zh: ["企业解决方案", "批量处理"],
+                    en: ["Enterprise Solution", "Batch Processing"]
+                },
+                languages: ["ko"], 
+                price: "freemium", 
+                threshold: "medium", 
+                rating: 4.1,
+                bgColor: "#f9e000",
+                isFavorited: false
+            },
+            { 
+                id: 7, 
+                name: "Perplexity", 
+                url: "https://perplexity.ai",
+                category: "text", 
+                features: {
+                    ko: ["AI 검색", "실시간 정보", "인용 출처", "연구 지원"],
+                    zh: ["AI搜索", "实时信息", "引用来源", "研究支持"],
+                    en: ["AI Search", "Real-time Info", "Citation Sources", "Research Support"]
+                },
+                freeFeatures: {
+                    ko: ["기본 검색 기능", "일일 제한 쿼리"],
+                    zh: ["基础搜索功能", "每日限制查询"],
+                    en: ["Basic Search Features", "Daily Query Limit"]
+                },
+                paidFeatures: {
+                    ko: ["Pro 검색", "파일 업로드", "API 접근"],
+                    zh: ["Pro搜索", "文件上传", "API访问"],
+                    en: ["Pro Search", "File Upload", "API Access"]
+                },
+                languages: ["en"], 
+                price: "freemium", 
+                threshold: "easy", 
+                rating: 4.6,
+                bgColor: "#2563eb",
+                isFavorited: false
+            },
+
+            // 图像生成工具
+            { 
+                id: 8, 
+                name: "Midjourney", 
+                url: "https://midjourney.com",
+                category: "image", 
+                features: {
+                    ko: ["고품질 이미지", "아트 스타일", "이미지 편집", "배치 생성", "증명사진"],
+                    zh: ["高质量图像", "艺术风格", "图像编辑", "批量生成", "证件照"],
+                    en: ["High Quality Images", "Art Styles", "Image Editing", "Batch Generation", "ID Photo"]
+                },
+                freeFeatures: {
+                    ko: ["무료 평가판 (25회)", "기본 모델"],
+                    zh: ["免费试用(25次)", "基础模型"],
+                    en: ["Free Trial (25 runs)", "Basic Model"]
+                },
+                paidFeatures: {
+                    ko: ["무제한 생성", "고해상도", "VIP 모델", "커스텀 트레이닝"],
+                    zh: ["无限生成", "高分辨率", "VIP模型", "自定义训练"],
+                    en: ["Unlimited Generation", "High Resolution", "VIP Models", "Custom Training"]
+                },
+                languages: ["en"], 
+                price: "paid", 
+                threshold: "medium", 
+                rating: 4.9,
+                bgColor: "#333333",
+                isFavorited: false
+            },
+            { 
+                id: 9, 
+                name: "DALL-E 3", 
+                url: "https://openai.com/dall-e-3",
+                category: "image", 
+                features: {
+                    ko: ["텍스트-이미지", "자연어 이해", "고해상도", "편집 기능", "증명사진"],
+                    zh: ["文生图", "自然语言理解", "高分辨率", "编辑功能", "证件照"],
+                    en: ["Text-to-Image", "Natural Language Understanding", "High Resolution", "Editing Features", "ID Photo"]
+                },
+                freeFeatures: {
+                    ko: ["ChatGPT 무료 플랜 포함 제한"],
+                    zh: ["ChatGPT免费计划包含限制"],
+                    en: ["Limited with ChatGPT Free Plan"]
+                },
+                paidFeatures: {
+                    ko: ["무제한 생성", "API 접근", "고해상도 출력"],
+                    zh: ["无限生成", "API访问", "高分辨率输出"],
+                    en: ["Unlimited Generation", "API Access", "High Resolution Output"]
+                },
+                languages: ["ko", "zh", "en"], 
+                price: "freemium", 
+                threshold: "easy", 
+                rating: 4.6,
+                bgColor: "#10a37f",
+                isFavorited: false
+            },
+            { 
+                id: 10, 
+                name: "Stable Diffusion", 
+                url: "https://stability.ai",
+                category: "image", 
+                features: {
+                    ko: ["오픈소스", "로컬 실행", "커스텀 모델", "LoRA 지원", "증명사진"],
+                    zh: ["开源", "本地运行", "自定义模型", "LoRA支持", "证件照"],
+                    en: ["Open Source", "Local Execution", "Custom Models", "LoRA Support", "ID Photo"]
+                },
+                freeFeatures: {
+                    ko: ["완전 무료 오픈소스", "자체 호스팅", "무제한 생성"],
+                    zh: ["完全免费开源", "自托管", "无限生成"],
+                    en: ["Completely Free Open Source", "Self-hosting", "Unlimited Generation"]
+                },
+                paidFeatures: {
+                    ko: ["클라우드 호스팅", "기업용 지원", "API 서비스"],
+                    zh: ["云托管", "企业支持", "API服务"],
+                    en: ["Cloud Hosting", "Enterprise Support", "API Service"]
+                },
+                languages: ["ko", "zh", "en"], 
+                price: "free", 
+                threshold: "hard", 
+                rating: 4.6,
+                bgColor: "#6366f1",
+                isFavorited: false
+            },
+            { 
+                id: 11, 
+                name: "Adobe Firefly", 
+                url: "https://firefly.adobe.com",
+                category: "image", 
+                features: {
+                    ko: ["Photoshop 통합", "상업적 사용", "브랜드 맞춤", "텍스트 효과", "증명사진"],
+                    zh: ["Photoshop集成", "商业使用", "品牌定制", "文字效果", "证件照"],
+                    en: ["Photoshop Integration", "Commercial Use", "Brand Customization", "Text Effects", "ID Photo"]
+                },
+                freeFeatures: {
+                    ko: ["기본 생성 25회/월", "웹 인터페이스"],
+                    zh: ["基础生成25次/月", "网页界面"],
+                    en: ["25 Generations/month", "Web Interface"]
+                },
+                paidFeatures: {
+                    ko: ["무제한 생성", "Creative Cloud 통합", "기업용 기능"],
+                    zh: ["无限生成", "Creative Cloud集成", "企业功能"],
+                    en: ["Unlimited Generation", "Creative Cloud Integration", "Enterprise Features"]
+                },
+                languages: ["ko", "zh", "en"], 
+                price: "freemium", 
+                threshold: "easy", 
+                rating: 4.6,
+                bgColor: "#ff0000",
+                isFavorited: false
+            },
+            { 
+                id: 12, 
+                name: "Canva Magic Media", 
+                url: "https://canva.com",
+                category: "image", 
+                features: {
+                    ko: ["디자인 통합", "템플릿", "이미지 편집", "브랜드 키트"],
+                    zh: ["设计集成", "模板", "图像编辑", "品牌套件"],
+                    en: ["Design Integration", "Templates", "Image Editing", "Brand Kit"]
+                },
+                freeFeatures: {
+                    ko: ["기본 이미지 생성 5회/일", "무료 템플릿"],
+                    zh: ["基础图像生成5次/天", "免费模板"],
+                    en: ["5 Image Generations/day", "Free Templates"]
+                },
+                paidFeatures: {
+                    ko: ["무제한 생성", "Pro 템플릿", "브랜드 기능"],
+                    zh: ["无限生成", "Pro模板", "品牌功能"],
+                    en: ["Unlimited Generation", "Pro Templates", "Brand Features"]
+                },
+                languages: ["ko", "zh", "en"], 
+                price: "freemium", 
+                threshold: "easy", 
+                rating: 4.5,
+                bgColor: "#00c4cc",
+                isFavorited: false
+            },
+            { 
+                id: 13, 
+                name: "Bing Image Creator", 
+                url: "https://bing.com/create",
+                category: "image", 
+                features: {
+                    ko: ["DALL-E 기반", "무료 생성", "마이크로소프트 통합"],
+                    zh: ["DALL-E基础", "免费生成", "微软集成"],
+                    en: ["DALL-E Based", "Free Generation", "Microsoft Integration"]
+                },
+                freeFeatures: {
+                    ko: ["일일 10회 무료 생성", "기본 모델"],
+                    zh: ["每日10次免费生成", "基础模型"],
+                    en: ["10 Free Generations/day", "Basic Model"]
+                },
+                paidFeatures: {
+                    ko: ["부스트 크레딧", "고속 생성"],
+                    zh: ["加速积分", "快速生成"],
+                    en: ["Boost Credits", "Fast Generation"]
+                },
+                languages: ["ko", "zh", "en"], 
+                price: "freemium", 
+                threshold: "easy", 
+                rating: 4.5,
+                bgColor: "#0078d4",
+                isFavorited: false
+            },
+
+            // 视频生成工具
+            { 
+                id: 14, 
+                name: "Runway ML", 
+                url: "https://runwayml.com",
+                category: "video", 
+                features: {
+                    ko: ["텍스트-비디오", "비디오 편집", "모션 브러시", "그린스크린"],
+                    zh: ["文生视频", "视频编辑", "运动笔刷", "绿幕"],
+                    en: ["Text-to-Video", "Video Editing", "Motion Brush", "Green Screen"]
+                },
+                freeFeatures: {
+                    ko: ["125 크레딧/월", "720p 출력", "기본 기능"],
+                    zh: ["125积分/月", "720p输出", "基础功能"],
+                    en: ["125 Credits/month", "720p Output", "Basic Features"]
+                },
+                paidFeatures: {
+                    ko: ["무제한 크레딧", "4K 출력", "고급 모델", "API"],
+                    zh: ["无限积分", "4K输出", "高级模型", "API"],
+                    en: ["Unlimited Credits", "4K Output", "Advanced Models", "API"]
+                },
+                languages: ["en"], 
+                price: "freemium", 
+                threshold: "medium", 
+                rating: 4.5,
+                bgColor: "#000000",
+                isFavorited: false
+            },
+            { 
+                id: 15, 
+                name: "Pika Labs", 
+                url: "https://pika.art",
+                category: "video", 
+                features: {
+                    ko: ["텍스트-비디오", "이미지-비디오", "애니메이션", "스타일 전환"],
+                    zh: ["文生视频", "图生视频", "动画", "风格转换"],
+                    en: ["Text-to-Video", "Image-to-Video", "Animation", "Style Transfer"]
+                },
+                freeFeatures: {
+                    ko: ["Discord 기반 무료 생성", "기본 해상도"],
+                    zh: ["Discord免费生成", "基础分辨率"],
+                    en: ["Free Generation via Discord", "Basic Resolution"]
+                },
+                paidFeatures: {
+                    ko: ["고해상도", "긴 영상", "API 접근"],
+                    zh: ["高分辨率", "长视频", "API访问"],
+                    en: ["High Resolution", "Long Videos", "API Access"]
+                },
+                languages: ["en"], 
+                price: "free", 
+                threshold: "easy", 
+                rating: 4.4,
+                bgColor: "#000000",
+                isFavorited: false
+            },
+            { 
+                id: 16, 
+                name: "Sora", 
+                url: "https://openai.com/sora",
+                category: "video", 
+                features: {
+                    ko: ["고품질 비디오", "실제 같은 영상", "복잡한 장면", "60초 영상"],
+                    zh: ["高质量视频", "真实感视频", "复杂场景", "60秒视频"],
+                    en: ["High Quality Video", "Photorealistic Video", "Complex Scenes", "60s Video"]
+                },
+                freeFeatures: {
+                    ko: ["연구자 대상 테스트"],
+                    zh: ["面向研究者测试"],
+                    en: ["Researcher Testing"]
+                },
+                paidFeatures: {
+                    ko: ["대중 출시 예정", "API 서비스"],
+                    zh: ["即将公开发布", "API服务"],
+                    en: ["Public Launch Coming", "API Service"]
+                },
+                languages: ["en"], 
+                price: "coming", 
+                threshold: "easy", 
+                rating: 4.9,
+                bgColor: "#e53e3e",
+                isFavorited: false
+            },
+            { 
+                id: 17, 
+                name: "Synthesia", 
+                url: "https://synthesia.io",
+                category: "video", 
+                features: {
+                    ko: ["AI 아바타", "텍스트-음성", "다국어 지원", "스크린 녹화"],
+                    zh: ["AI虚拟人", "文生语音", "多语言支持", "屏幕录制"],
+                    en: ["AI Avatars", "Text-to-Speech", "Multi-language", "Screen Recording"]
+                },
+                freeFeatures: {
+                    ko: ["데모 비디오 생성", "제한된 아바타"],
+                    zh: ["演示视频生成", "有限虚拟人"],
+                    en: ["Demo Video Generation", "Limited Avatars"]
+                },
+                paidFeatures: {
+                    ko: ["무제한 비디오", "커스텀 아바타", "API"],
+                    zh: ["无限视频", "自定义虚拟人", "API"],
+                    en: ["Unlimited Videos", "Custom Avatars", "API"]
+                },
+                languages: ["ko", "zh", "en"], 
+                price: "paid", 
+                threshold: "easy", 
+                rating: 4.6,
+                bgColor: "#3b82f6",
+                isFavorited: false
+            },
+
+            // 代码生成工具
+            { 
+                id: 18, 
+                name: "GitHub Copilot", 
+                url: "https://github.com/copilot",
+                category: "code", 
+                features: {
+                    ko: ["코드 자동완성", "IDE 통합", "리팩토링", "디버깅"],
+                    zh: ["代码补全", "IDE集成", "重构", "调试"],
+                    en: ["Code Completion", "IDE Integration", "Refactoring", "Debugging"]
+                },
+                freeFeatures: {
+                    ko: ["학생/교사 무료", "오픈소스 유지보수자 무료"],
+                    zh: ["学生/教师免费", "开源维护者免费"],
+                    en: ["Free for Students/Teachers", "Free for Open Source Maintainers"]
+                },
+                paidFeatures: {
+                    ko: ["개인 $10/월", "기업 $19/월", "기업 지원"],
+                    zh: ["个人$10/月", "企业$19/月", "企业支持"],
+                    en: ["Individual $10/mo", "Business $19/mo", "Enterprise Support"]
+                },
+                languages: ["en"], 
+                price: "freemium", 
+                threshold: "medium", 
+                rating: 4.8,
+                bgColor: "#24292e",
+                isFavorited: false
+            },
+            { 
+                id: 19, 
+                name: "CodeLlama", 
+                url: "https://ai.meta.com/code-llama/",
+                category: "code", 
+                features: {
+                    ko: ["Meta 오픈소스", "코드 생성", "디버깅", "다양한 언어"],
+                    zh: ["Meta开源", "代码生成", "调试", "多语言支持"],
+                    en: ["Meta Open Source", "Code Generation", "Debugging", "Multi-language"]
+                },
+                freeFeatures: {
+                    ko: ["완전 무료 오픈소스", "상업적 사용 가능", "자체 호스팅"],
+                    zh: ["完全免费开源", "商业使用许可", "自托管"],
+                    en: ["Completely Free Open Source", "Commercial Use Allowed", "Self-hosting"]
+                },
+                paidFeatures: {
+                    ko: ["기업용 지원", "호스팅 서비스"],
+                    zh: ["企业支持", "托管服务"],
+                    en: ["Enterprise Support", "Hosting Service"]
+                },
+                languages: ["en"], 
+                price: "free", 
+                threshold: "hard", 
+                rating: 4.5,
+                bgColor: "#0668e1",
+                isFavorited: false
+            },
+            { 
+                id: 20, 
+                name: "Tabnine", 
+                url: "https://tabnine.com",
+                category: "code", 
+                features: {
+                    ko: ["AI 코드 완성", "IDE 통합", "팀 학습", "코드 설명"],
+                    zh: ["AI代码补全", "IDE集成", "团队学习", "代码解释"],
+                    en: ["AI Code Completion", "IDE Integration", "Team Learning", "Code Explanation"]
+                },
+                freeFeatures: {
+                    ko: ["기본 완성", "제한된 언어"],
+                    zh: ["基础补全", "有限语言"],
+                    en: ["Basic Completion", "Limited Languages"]
+                },
+                paidFeatures: {
+                    ko: ["고급 완성", "전체 언어", "팀 기능"],
+                    zh: ["高级补全", "全语言支持", "团队功能"],
+                    en: ["Advanced Completion", "All Languages", "Team Features"]
+                },
+                languages: ["en"], 
+                price: "freemium", 
+                threshold: "medium", 
+                rating: 4.5,
+                bgColor: "#8b5cf6",
+                isFavorited: false
+            },
+            { 
+                id: 21, 
+                name: "Amazon CodeWhisperer", 
+                url: "https://aws.amazon.com/codewhisperer/",
+                category: "code", 
+                features: {
+                    ko: ["AWS 통합", "보안 스캐닝", "코드 참조", "다양한 언어"],
+                    zh: ["AWS集成", "安全扫描", "代码引用", "多语言支持"],
+                    en: ["AWS Integration", "Security Scanning", "Code Reference", "Multi-language"]
+                },
+                freeFeatures: {
+                    ko: ["개인 개발자 무료", "보안 스캐닝"],
+                    zh: ["个人开发者免费", "安全扫描"],
+                    en: ["Free for Individual Devs", "Security Scanning"]
+                },
+                paidFeatures: {
+                    ko: ["기업용 $19/사용자/월", "전문 지원"],
+                    zh: ["企业版$19/用户/月", "专业支持"],
+                    en: ["Business $19/user/mo", "Professional Support"]
+                },
+                languages: ["en"], 
+                price: "freemium", 
+                threshold: "medium", 
+                rating: 4.5,
+                bgColor: "#ff9900",
+                isFavorited: false
+            }
+        ];
+
+        // ==================== 新增：搜索优化相关全局变量 ====================
+        // 多语言同义词词典
+        const synonymMap = {
+            // 中文同义词
+            "文生图": ["图像生成", "ai绘画", "图片生成", "画图"],
+            "写代码": ["代码生成", "编程助手", "代码助手"],
+            "做视频": ["视频生成", "文生视频", "ai视频"],
+            "聊天": ["对话", "问答", "大模型"],
+            "翻译": ["语言翻译", "多语言"],
+            
+            // 韩文同义词
+            "그림그리기": ["이미지 생성", "ai 그림", "텍스트 이미지"],
+            "코드작성": ["코드 생성", "프로그래밍 도우미"],
+            "비디오만들기": ["비디오 생성", "텍스트 비디오"],
+            
+            // 英文同义词
+            "text to image": ["image generation", "ai art", "drawing"],
+            "code writing": ["code generation", "programming assistant"],
+            "video creation": ["video generation", "text to video"]
+        };
+
+        // 搜索历史
+        let searchHistory = JSON.parse(localStorage.getItem('searchHistory')) || [];
+        
+        // 热门搜索
+        const hotSearches = ["ChatGPT", "Midjourney", "Claude 3", "DALL-E 3", "GitHub Copilot"];
+        // ==================================================================
+
+        // 全局变量
+        let currentLang = localStorage.getItem('lang') || 'ko';
+        let userBehavior = JSON.parse(localStorage.getItem('userBehavior')) || { 
+            favorites: [], 
+            workspaces: [{ id: 1, name: "기본 작업 공간", tools: [] }] 
+        };
+        let currentSelectedToolId = null;
+        let currentPriceFilter = 'all';
+        let currentDifficultyFilter = 'all';
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            // 从本地存储恢复收藏状态
+            if (userBehavior.favorites) {
+                userBehavior.favorites.forEach(toolId => {
+                    const tool = aiTools.find(t => t.id === toolId);
+                    if (tool) tool.isFavorited = true;
+                });
+            }
+            
+            initLanguage();
+            initNavigation();
+            initFilters();
+            initAllToolsByCategory();
+            initWorkspaces();
+            initWorkspaceSelector();
+            initSearch();
+            
+            // 显示热门工具
+            showPopularTools();
+
+            // 新增：全局快捷键 - 按"/"聚焦搜索框
+            document.addEventListener('keydown', (e) => {
+                if (e.key === '/' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+                    e.preventDefault();
+                    document.getElementById('searchInput').focus();
+                }
+            });
+        });
+
+        // 导航功能
+        function initNavigation() {
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetId = link.getAttribute('href').substring(1);
+                    const targetElement = document.getElementById(targetId);
+                    if (targetElement) {
+                        targetElement.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+            });
+        }
+
+        // 语言切换功能
+        function initLanguage() {
+            updateLanguage(currentLang);
+            
+            document.getElementById('langToggle').addEventListener('click', (e) => {
+                e.stopPropagation();
+                document.getElementById('langMenu').classList.toggle('hidden');
+            });
+            
+            document.querySelectorAll('#langMenu button').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const lang = btn.dataset.lang;
+                    currentLang = lang;
+                    localStorage.setItem('lang', lang);
+                    updateLanguage(lang);
+                    document.getElementById('langMenu').classList.add('hidden');
+                    
+                    // 更新所有动态内容
+                    initAllToolsByCategory();
+                    showPopularTools();
+                    initWorkspaces();
+                });
+            });
+            
+            document.addEventListener('click', () => {
+                document.getElementById('langMenu').classList.add('hidden');
+            });
+        }
+
+        function updateLanguage(lang) {
+            document.documentElement.lang = lang;
+            document.getElementById('currentLang').textContent = { ko: '한국어', zh: '中文', en: 'English' }[lang];
+            
+            // 更新所有带data-i18n属性的静态元素
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.dataset.i18n;
+                const keys = key.split('.');
+                let value = translations[lang];
+                for (const k of keys) {
+                    value = value[k];
+                }
+                if (value) el.textContent = value;
+            });
+            
+            // 更新所有占位符
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.dataset.i18nPlaceholder;
+                const keys = key.split('.');
+                let value = translations[lang];
+                for (const k of keys) {
+                    value = value[k];
+                }
+                if (value) el.placeholder = value;
+            });
+            
+            // 统一更新所有收藏按钮的文本
+            updateAllFavoriteButtonsText();
+        }
+
+        // 统一更新所有收藏按钮文本的全局函数
+        function updateAllFavoriteButtonsText() {
+            document.querySelectorAll('.favorite-btn').forEach(btn => {
+                const isFavorited = btn.classList.contains('border-red-500');
+                const icon = btn.querySelector('i');
+                const textNode = btn.childNodes[btn.childNodes.length - 1];
+                
+                if (isFavorited) {
+                    textNode.textContent = ' ' + translations[currentLang].tool.unfavorite;
+                    icon.className = 'fa fa-heart text-red-500 mr-2';
+                } else {
+                    textNode.textContent = ' ' + translations[currentLang].tool.favorite;
+                    icon.className = 'fa fa-heart-o mr-2';
+                }
+            });
+        }
+
+        // 筛选功能初始化
+        function initFilters() {
+            // 价格筛选按钮事件
+            document.querySelectorAll('#priceFilters .filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // 更新按钮状态
+                    document.querySelectorAll('#priceFilters .filter-btn').forEach(b => {
+                        b.classList.remove('filter-btn-active');
+                    });
+                    btn.classList.add('filter-btn-active');
+                    
+                    // 更新筛选状态
+                    currentPriceFilter = btn.dataset.price;
+                    
+                    // 重新渲染工具列表
+                    initAllToolsByCategory();
+                });
+            });
+            
+            // 难度筛选按钮事件
+            document.querySelectorAll('#difficultyFilters .filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // 更新按钮状态
+                    document.querySelectorAll('#difficultyFilters .filter-btn').forEach(b => {
+                        b.classList.remove('filter-btn-active');
+                    });
+                    btn.classList.add('filter-btn-active');
+                    
+                    // 更新筛选状态
+                    currentDifficultyFilter = btn.dataset.difficulty;
+                    
+                    // 重新渲染工具列表
+                    initAllToolsByCategory();
+                });
+            });
+        }
+
+        // 工具筛选函数
+        function filterTools(tools) {
+            return tools.filter(tool => {
+                // 价格筛选
+                const priceMatch = currentPriceFilter === 'all' || tool.price === currentPriceFilter;
+                
+                // 难度筛选
+                const difficultyMatch = currentDifficultyFilter === 'all' || tool.threshold === currentDifficultyFilter;
+                
+                return priceMatch && difficultyMatch;
+            });
+        }
+
+        // 公共工具卡片渲染函数
+        function renderToolCard(tool) {
+            // 获取价格和难度的文本与样式
+            const priceText = translations[currentLang].tool.price[tool.price] || '';
+            const priceClass = {
+                free: 'bg-green-500/20 text-green-400',
+                paid: 'bg-red-500/20 text-red-400',
+                freemium: 'bg-blue-500/20 text-blue-400',
+                coming: 'bg-purple-500/20 text-purple-400'
+            }[tool.price] || 'bg-gray-500/20 text-gray-400';
+            
+            const difficultyText = translations[currentLang].tool.difficulty[tool.threshold] || '';
+            const difficultyClass = {
+                easy: 'bg-green-500/20 text-green-400',
+                medium: 'bg-yellow-500/20 text-yellow-400',
+                hard: 'bg-red-500/20 text-red-400'
+            }[tool.threshold] || 'bg-gray-500/20 text-gray-400';
+            
+            return `
+                <div class="bg-dark rounded-xl border border-gray-700 overflow-hidden card-hover">
+                    <a href="${tool.url}" target="_blank" class="block cursor-pointer">
+                        <div class="h-24 flex items-center justify-center p-4" style="background-color: ${tool.bgColor}">
+                            <span class="text-white text-xl font-bold">${tool.name}</span>
+                        </div>
+                        <div class="p-6">
+                            <h4 class="text-lg font-semibold mb-2">${tool.name}</h4>
+                            
+                            <div class="mb-3">
+                                <p class="text-xs text-gray-500 mb-1">${translations[currentLang].tool.mainFeatures}</p>
+                                <div class="flex flex-wrap gap-1">
+                                    ${tool.features[currentLang].slice(0, 3).map(f => `<span class="text-xs px-2 py-1 bg-gray-800 rounded text-gray-300">${f}</span>`).join('')}
+                                    ${tool.features[currentLang].length > 3 ? `<span class="text-xs px-2 py-1 bg-gray-800 rounded text-gray-400">+${tool.features[currentLang].length - 3}</span>` : ''}
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <p class="text-xs text-gray-500 mb-1">${translations[currentLang].tool.freeFeatures}</p>
+                                <p class="text-xs text-gray-400 line-clamp-2">${Array.isArray(tool.freeFeatures[currentLang]) ? tool.freeFeatures[currentLang].join(', ') : tool.freeFeatures[currentLang]}</p>
+                            </div>
+                            
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm text-yellow-500">⭐ ${tool.rating}</span>
+                                    <span class="text-xs px-2 py-1 rounded ${priceClass}">${priceText}</span>
+                                    <span class="text-xs px-2 py-1 rounded ${difficultyClass}">${difficultyText}</span>
+                                </div>
+                                <span class="text-xs text-primary">${translations[currentLang].tool.visit} <i class="fa fa-external-link"></i></span>
+                            </div>
+                        </div>
+                    </a>
+                    <div class="px-6 pb-4">
+                        <button 
+                            class="favorite-btn w-full px-3 py-2 rounded-lg border transition-colors ${tool.isFavorited ? 'border-red-500 bg-red-500/10' : 'border-gray-600 hover:border-primary'}" 
+                            data-tool-id="${tool.id}"
+                            onclick="event.stopPropagation();"
+                        >
+                            <i class="fa ${tool.isFavorited ? 'fa-heart text-red-500' : 'fa-heart-o'} mr-2"></i>
+                            ${tool.isFavorited ? translations[currentLang].tool.unfavorite : translations[currentLang].tool.favorite}
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 所有工具按分类展示
+        function initAllToolsByCategory() {
+            // 文本工具
+            const textTools = filterTools(aiTools.filter(t => t.category === 'text'));
+            renderToolsInCategory('textTools', textTools);
+            
+            // 图像工具
+            const imageTools = filterTools(aiTools.filter(t => t.category === 'image'));
+            renderToolsInCategory('imageTools', imageTools);
+            
+            // 视频工具
+            const videoTools = filterTools(aiTools.filter(t => t.category === 'video'));
+            renderToolsInCategory('videoTools', videoTools);
+            
+            // 代码工具
+            const codeTools = filterTools(aiTools.filter(t => t.category === 'code'));
+            renderToolsInCategory('codeTools', codeTools);
+        }
+
+        function renderToolsInCategory(containerId, tools) {
+            const container = document.getElementById(containerId);
+            
+            if (tools.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-8 text-gray-400">
+                        ${translations[currentLang].search.noResults}
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = tools.map(tool => renderToolCard(tool)).join('');
+            bindFavoriteButtons(containerId);
+        }
+
+        // 热门工具展示
+        function showPopularTools() {
+            const section = document.getElementById('personalizedSection');
+            const container = document.getElementById('personalizedTools');
+            
+            let popularTools = [...aiTools].sort((a, b) => b.rating - a.rating).slice(0, 4);
+            container.innerHTML = popularTools.map(tool => renderToolCard(tool)).join('');
+            
+            section.classList.remove('hidden');
+            bindFavoriteButtons('personalizedTools');
+        }
+
+        // 绑定收藏按钮事件
+        function bindFavoriteButtons(containerId) {
+            document.querySelectorAll(`#${containerId} .favorite-btn`).forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const toolId = parseInt(e.currentTarget.dataset.toolId);
+                    toggleFavorite(toolId, e.currentTarget);
+                });
+            });
+        }
+
+        // 收藏/取消收藏切换
+        function toggleFavorite(toolId, btnElement) {
+            const tool = aiTools.find(t => t.id === toolId);
+            if (!tool) return;
+            
+            if (tool.isFavorited) {
+                if (confirm(translations[currentLang].workspaces.confirmDelete)) {
+                    // 从所有工作区移除
+                    userBehavior.workspaces.forEach(workspace => {
+                        workspace.tools = workspace.tools.filter(id => id !== toolId);
+                    });
+                    
+                    tool.isFavorited = false;
+                    userBehavior.favorites = userBehavior.favorites.filter(id => id !== toolId);
+                    
+                    localStorage.setItem('userBehavior', JSON.stringify(userBehavior));
+                    
+                    // 更新按钮状态
+                    btnElement.classList.remove('border-red-500', 'bg-red-500/10');
+                    btnElement.classList.add('border-gray-600', 'hover:border-primary');
+                    
+                    // 使用全局函数更新按钮文本
+                    updateAllFavoriteButtonsText();
+                    
+                    initAllToolsByCategory();
+                    showPopularTools();
+                    renderWorkspaces();
+                }
+            } else {
+                currentSelectedToolId = toolId;
+                showWorkspaceSelector();
+            }
+        }
+
+        // 工作区选择器
+        function initWorkspaceSelector() {
+            document.getElementById('cancelWorkspaceBtn').addEventListener('click', () => {
+                hideWorkspaceSelector();
+            });
+            
+            document.getElementById('confirmWorkspaceBtn').addEventListener('click', () => {
+                confirmWorkspaceSelection();
+            });
+            
+            document.getElementById('workspaceSelectorModal').addEventListener('click', (e) => {
+                if (e.target === document.getElementById('workspaceSelectorModal')) {
+                    hideWorkspaceSelector();
+                }
+            });
+        }
+
+        function showWorkspaceSelector() {
+            const modal = document.getElementById('workspaceSelectorModal');
+            const listContainer = document.getElementById('workspaceList');
+            
+            listContainer.innerHTML = userBehavior.workspaces.map(workspace => `
+                <label class="flex items-center p-3 rounded-lg border border-gray-700 hover:border-primary cursor-pointer transition-colors">
+                    <input type="checkbox" class="mr-3 workspace-checkbox" value="${workspace.id}">
+                    <span>${workspace.name}</span>
+                </label>
+            `).join('');
+            
+            modal.classList.remove('hidden');
+        }
+
+        function hideWorkspaceSelector() {
+            document.getElementById('workspaceSelectorModal').classList.add('hidden');
+            currentSelectedToolId = null;
+        }
+
+        function confirmWorkspaceSelection() {
+            const selectedWorkspaceIds = Array.from(document.querySelectorAll('.workspace-checkbox:checked'))
+                .map(checkbox => parseInt(checkbox.value));
+            
+            if (selectedWorkspaceIds.length === 0) {
+                alert(translations[currentLang].workspaceSelector.noWorkspaces);
+                return;
+            }
+            
+            const tool = aiTools.find(t => t.id === currentSelectedToolId);
+            if (!tool) {
+                hideWorkspaceSelector();
+                return;
+            }
+            
+            selectedWorkspaceIds.forEach(workspaceId => {
+                const workspace = userBehavior.workspaces.find(w => w.id === workspaceId);
+                if (workspace && !workspace.tools.includes(currentSelectedToolId)) {
+                    workspace.tools.push(currentSelectedToolId);
+                }
+            });
+            
+            tool.isFavorited = true;
+            if (!userBehavior.favorites.includes(currentSelectedToolId)) {
+                userBehavior.favorites.push(currentSelectedToolId);
+            }
+            
+            localStorage.setItem('userBehavior', JSON.stringify(userBehavior));
+            hideWorkspaceSelector();
+            
+            // 更新所有工具卡片
+            initAllToolsByCategory();
+            showPopularTools();
+            renderWorkspaces();
+        }
+
+        // 工作区功能
+        function initWorkspaces() {
+            renderWorkspaces();
+            
+            document.getElementById('addWorkspaceBtn').addEventListener('click', () => {
+                const name = prompt(translations[currentLang].workspaces.enterName);
+                if (name && name.trim() !== '') {
+                    const newWorkspace = {
+                        id: Date.now(),
+                        name: name.trim(),
+                        tools: []
+                    };
+                    userBehavior.workspaces.push(newWorkspace);
+                    localStorage.setItem('userBehavior', JSON.stringify(userBehavior));
+                    renderWorkspaces();
+                }
+            });
+        }
+
+        function renderWorkspaces() {
+            const container = document.getElementById('workspacesContainer');
+            
+            container.innerHTML = userBehavior.workspaces.map(workspace => `
+                <div class="bg-dark rounded-xl border border-gray-700 p-6 card-hover">
+                    <div class="flex justify-between items-start mb-4">
+                        <h4 class="text-lg font-semibold">${workspace.name}</h4>
+                        <div class="flex space-x-2">
+                            <button class="text-gray-400 hover:text-primary transition-colors edit-workspace" data-id="${workspace.id}">
+                                <i class="fa fa-edit"></i>
+                            </button>
+                            ${workspace.id !== 1 ? `
+                                <button class="text-gray-400 hover:text-red-500 transition-colors delete-workspace" data-id="${workspace.id}">
+                                    <i class="fa fa-trash"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                    <p class="text-gray-400 mb-4">${workspace.tools.length} ${translations[currentLang].workspaces.tools}</p>
+                    <div class="space-y-2">
+                        ${workspace.tools.length > 0 ? 
+                            workspace.tools.map(toolId => {
+                                const tool = aiTools.find(t => t.id === toolId);
+                                return tool ? `
+                                    <div class="flex justify-between items-center p-2 rounded-lg bg-gray-800">
+                                        <a href="${tool.url}" target="_blank" class="text-gray-200 hover:text-primary transition-colors">${tool.name}</a>
+                                        <button class="remove-tool text-gray-400 hover:text-red-500 transition-colors" data-workspace-id="${workspace.id}" data-tool-id="${toolId}">
+                                            <i class="fa fa-times"></i>
+                                        </button>
+                                    </div>
+                                ` : '';
+                            }).join('') :
+                            `<p class="text-gray-500 text-sm">${translations[currentLang].workspaces.empty}</p>`
+                        }
+                    </div>
+                </div>
+            `).join('');
+            
+            // 绑定工作区事件
+            document.querySelectorAll('.edit-workspace').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = parseInt(e.currentTarget.dataset.id);
+                    const workspace = userBehavior.workspaces.find(w => w.id === id);
+                    const newName = prompt(translations[currentLang].workspaces.enterName, workspace.name);
+                    if (newName && newName.trim() !== '') {
+                        workspace.name = newName.trim();
+                        localStorage.setItem('userBehavior', JSON.stringify(userBehavior));
+                        renderWorkspaces();
+                    }
+                });
+            });
+            
+            document.querySelectorAll('.delete-workspace').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = parseInt(e.currentTarget.dataset.id);
+                    if (confirm(translations[currentLang].workspaces.confirmDelete)) {
+                        userBehavior.workspaces = userBehavior.workspaces.filter(w => w.id !== id);
+                        localStorage.setItem('userBehavior', JSON.stringify(userBehavior));
+                        renderWorkspaces();
+                    }
+                });
+            });
+            
+            document.querySelectorAll('.remove-tool').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const workspaceId = parseInt(e.currentTarget.dataset.workspaceId);
+                    const toolId = parseInt(e.currentTarget.dataset.toolId);
+                    const workspace = userBehavior.workspaces.find(w => w.id === workspaceId);
+                    
+                    workspace.tools = workspace.tools.filter(t => t !== toolId);
+                    
+                    const isToolInAnyWorkspace = userBehavior.workspaces.some(w => w.tools.includes(toolId));
+                    
+                    if (!isToolInAnyWorkspace) {
+                        const tool = aiTools.find(t => t.id === toolId);
+                        if (tool) {
+                            tool.isFavorited = false;
+                            userBehavior.favorites = userBehavior.favorites.filter(id => id !== toolId);
+                            initAllToolsByCategory();
+                            showPopularTools();
+                        }
+                    }
+                    
+                    localStorage.setItem('userBehavior', JSON.stringify(userBehavior));
+                    renderWorkspaces();
+                });
+            });
+        }
+
+        // ==================== 完全重写：智能搜索系统 ====================
+        // 拼写纠错算法（Levenshtein距离）
+        function levenshteinDistance(a, b) {
+            const matrix = Array.from({ length: a.length + 1 }, () => 
+                Array(b.length + 1).fill(0)
+            );
+            
+            for (let i = 0; i <= a.length; i++) matrix[i][0] = i;
+            for (let j = 0; j <= b.length; j++) matrix[0][j] = j;
+            
+            for (let i = 1; i <= a.length; i++) {
+                for (let j = 1; j <= b.length; j++) {
+                    const cost = a[i-1] === b[j-1] ? 0 : 1;
+                    matrix[i][j] = Math.min(
+                        matrix[i-1][j] + 1,     // 删除
+                        matrix[i][j-1] + 1,     // 插入
+                        matrix[i-1][j-1] + cost // 替换
+                    );
+                }
+            }
+            
+            return matrix[a.length][b.length];
+        }
+
+        // 获取自动补全建议
+        function getAutocompleteSuggestions(query) {
+            const suggestions = new Set();
+            const lowerQuery = query.toLowerCase();
+            
+            // 1. 工具名称建议
+            aiTools.forEach(tool => {
+                if (tool.name.toLowerCase().includes(lowerQuery)) {
+                    suggestions.add(tool.name);
+                }
+            });
+            
+            // 2. 功能关键词建议
+            const allFeatures = [];
+            aiTools.forEach(tool => {
+                for (const lang of ['ko', 'zh', 'en']) {
+                    tool.features[lang].forEach(f => allFeatures.push(f));
+                }
+            });
+            
+            allFeatures.forEach(feature => {
+                if (feature.toLowerCase().includes(lowerQuery)) {
+                    suggestions.add(feature);
+                }
+            });
+            
+            return Array.from(suggestions).slice(0, 4);
+        }
+
+        // 显示历史记录和热门搜索
+        function showHistoryAndHotSearches() {
+            const searchResults = document.getElementById('searchResults');
+            let html = '';
+            
+            // 搜索历史
+            if (searchHistory.length > 0) {
+                html += `
+                    <div class="border-b border-gray-700">
+                        <div class="p-3 flex justify-between items-center">
+                            <span class="text-sm text-gray-400">${translations[currentLang].search.searchHistory}</span>
+                            <button class="text-xs text-gray-500 hover:text-red-400" onclick="clearSearchHistory()">${translations[currentLang].search.clearHistory}</button>
+                        </div>
+                        ${searchHistory.slice(0, 5).map(term => `
+                            <div class="p-3 search-result-hover cursor-pointer history-item">
+                                <i class="fa fa-clock-o text-gray-400 mr-2"></i>
+                                <span>${term}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            
+            // 热门搜索
+            html += `
+                <div>
+                    <div class="p-3">
+                        <span class="text-sm text-gray-400">${translations[currentLang].search.hotSearches}</span>
+                    </div>
+                    <div class="px-3 pb-3 flex flex-wrap gap-2">
+                        ${hotSearches.map(term => `
+                            <span class="px-3 py-1 bg-gray-800 rounded-full text-sm cursor-pointer hover:bg-primary/20 hot-search-item">
+                                ${term}
+                            </span>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            
+            searchResults.innerHTML = html;
+            searchResults.classList.remove('hidden');
+            
+            // 绑定事件
+            document.querySelectorAll('.history-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    document.getElementById('searchInput').value = item.textContent.trim();
+                    document.getElementById('searchInput').dispatchEvent(new Event('input'));
+                });
+            });
+            
+            document.querySelectorAll('.hot-search-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    document.getElementById('searchInput').value = item.textContent.trim();
+                    document.getElementById('searchInput').dispatchEvent(new Event('input'));
+                });
+            });
+        }
+
+        // 保存搜索历史
+        function saveSearchHistory(term) {
+            if (!searchHistory.includes(term)) {
+                searchHistory.unshift(term);
+                searchHistory = searchHistory.slice(0, 10); // 只保存最近10条
+                localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
+            }
+        }
+
+        // 清除搜索历史
+        function clearSearchHistory() {
+            searchHistory = [];
+            localStorage.removeItem('searchHistory');
+            showHistoryAndHotSearches();
+        }
+
+        // 多维度加权搜索函数
+        function searchTools(query) {
+            const results = [];
+            const lowerQuery = query.toLowerCase().trim();
+            
+            // 权重配置
+            const WEIGHTS = {
+                EXACT_NAME: 100,    // 工具名称完全匹配
+                PARTIAL_NAME: 80,   // 工具名称部分匹配
+                EXACT_FEATURE: 60,  // 功能关键词完全匹配
+                SYNONYM_FEATURE: 50,// 同义词匹配
+                TAG_MATCH: 40,      // 标签匹配
+                RATING_BONUS: 10,   // 评分加分（每0.1分加1分）
+                FAVORITE_BONUS: 5   // 收藏数加分
+            };
+
+            aiTools.forEach(tool => {
+                let score = 0;
+                const toolName = tool.name.toLowerCase();
+                
+                // 1. 工具名称匹配
+                if (toolName === lowerQuery) {
+                    score += WEIGHTS.EXACT_NAME;
+                } else if (toolName.includes(lowerQuery)) {
+                    score += WEIGHTS.PARTIAL_NAME;
+                }
+                
+                // 2. 功能关键词匹配（多语言）
+                for (const lang of ['ko', 'zh', 'en']) {
+                    const features = tool.features[lang].map(f => f.toLowerCase());
+                    if (features.some(f => f === lowerQuery)) {
+                        score += WEIGHTS.EXACT_FEATURE;
+                        break;
+                    } else if (features.some(f => f.includes(lowerQuery))) {
+                        score += WEIGHTS.EXACT_FEATURE * 0.7;
+                        break;
+                    }
+                }
+                
+                // 3. 同义词匹配
+                if (synonymMap[lowerQuery]) {
+                    for (const lang of ['ko', 'zh', 'en']) {
+                        const features = tool.features[lang].map(f => f.toLowerCase());
+                        if (features.some(f => synonymMap[lowerQuery].map(s => s.toLowerCase()).includes(f))) {
+                            score += WEIGHTS.SYNONYM_FEATURE;
+                            break;
+                        }
+                    }
+                }
+                
+                // 4. 工具质量加分
+                score += tool.rating * WEIGHTS.RATING_BONUS;
+                score += (userBehavior.favorites.filter(id => id === tool.id).length / 10) * WEIGHTS.FAVORITE_BONUS;
+                
+                if (score > 0) {
+                    results.push({ tool, score });
+                }
+            });
+            
+            // 如果没有结果，尝试拼写纠错
+            if (results.length === 0 && lowerQuery.length > 2) {
+                const allToolNames = aiTools.map(t => t.name.toLowerCase());
+                const corrections = allToolNames
+                    .map(name => ({ name, distance: levenshteinDistance(lowerQuery, name) }))
+                    .filter(item => item.distance <= 2) // 最多允许2个字符错误
+                    .sort((a, b) => a.distance - b.distance);
+                
+                if (corrections.length > 0) {
+                    const correctedName = corrections[0].name;
+                    const correctedTool = aiTools.find(t => t.name.toLowerCase() === correctedName);
+                    results.push({ 
+                        tool: correctedTool, 
+                        score: 50, 
+                        isCorrection: true, 
+                        correctedQuery: correctedTool.name
+                    });
+                }
+            }
+            
+            // 按得分降序排序，返回前8个结果
+            return results.sort((a, b) => b.score - a.score).slice(0, 8);
+        }
+
+        // 渲染搜索结果（支持纠错提示、自动补全、结果内筛选）
+        function renderSearchResults(results, suggestions = []) {
+            const searchResults = document.getElementById('searchResults');
+            
+            if (results.length === 0 && suggestions.length === 0) {
+                searchResults.innerHTML = `
+                    <div class="p-4 text-center text-gray-400">
+                        ${translations[currentLang].search.noResults}
+                        <div class="mt-2 text-sm">
+                            ${translations[currentLang].search.hotSearches}：
+                            <span class="text-primary cursor-pointer hot-search-item">ChatGPT</span>、
+                            <span class="text-primary cursor-pointer hot-search-item">Midjourney</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                let html = '';
+                
+                // 显示纠错提示
+                if (results[0]?.isCorrection) {
+                    html += `
+                        <div class="p-3 bg-blue-500/10 border-b border-gray-700">
+                            <span class="text-gray-400">${translations[currentLang].search.didYouMean}</span>
+                            <span class="text-primary font-semibold">${results[0].correctedQuery}</span>
+                        </div>
+                    `;
+                }
+                
+                // 显示自动补全建议
+                if (suggestions.length > 0) {
+                    html += `<div class="border-b border-gray-700">`;
+                    suggestions.forEach(suggestion => {
+                        html += `
+                            <div class="p-3 search-result-hover suggestion-item cursor-pointer">
+                                <i class="fa fa-search text-gray-400 mr-2"></i>
+                                <span>${suggestion}</span>
+                            </div>
+                        `;
+                    });
+                    html += `</div>`;
+                }
+                
+                // 显示搜索结果内筛选栏
+                if (results.length > 0 && !results[0]?.isCorrection) {
+                    html += `
+                        <div class="p-3 bg-gray-800/50 border-b border-gray-700 flex flex-wrap gap-2">
+                            <span class="text-sm text-gray-400">${translations[currentLang].search.filter}：</span>
+                            <button class="text-xs px-2 py-1 rounded border border-gray-600 hover:border-primary filter-result-btn filter-btn-active" data-filter="all">${translations[currentLang].filters.all}</button>
+                            <button class="text-xs px-2 py-1 rounded border border-gray-600 hover:border-primary filter-result-btn" data-filter="free">${translations[currentLang].filters.free}</button>
+                            <button class="text-xs px-2 py-1 rounded border border-gray-600 hover:border-primary filter-result-btn" data-filter="freemium">${translations[currentLang].filters.freemium}</button>
+                            <button class="text-xs px-2 py-1 rounded border border-gray-600 hover:border-primary filter-result-btn" data-filter="paid">${translations[currentLang].filters.paid}</button>
+                        </div>
+                        <div id="filteredResultsContainer">
+                    `;
+                    
+                    // 初始显示全部结果
+                    results.forEach(({ tool }) => {
+                        const priceText = translations[currentLang].tool.price[tool.price] || '';
+                        const priceClass = {
+                            free: 'bg-green-500/20 text-green-400',
+                            paid: 'bg-red-500/20 text-red-400',
+                            freemium: 'bg-blue-500/20 text-blue-400',
+                            coming: 'bg-purple-500/20 text-purple-400'
+                        }[tool.price] || 'bg-gray-500/20 text-gray-400';
+                        
+                        html += `
+                            <a href="${tool.url}" target="_blank" class="block p-4 search-result-hover border-b border-gray-700 last:border-b-0 search-result-item" data-price="${tool.price}">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <h4 class="font-semibold text-white flex items-center gap-2">
+                                            ${tool.name}
+                                            <span class="text-xs px-2 py-0.5 rounded ${priceClass}">${priceText}</span>
+                                        </h4>
+                                        <p class="text-sm text-gray-400 mt-1">
+                                            ⭐ ${tool.rating} · ${tool.features[currentLang].slice(0, 2).join(' · ')}
+                                        </p>
+                                    </div>
+                                    <span class="text-xs text-primary">${translations[currentLang].tool.visit} <i class="fa fa-external-link"></i></span>
+                                </div>
+                            </a>
+                        `;
+                    });
+                    
+                    html += `</div>`;
+                } else {
+                    // 纠错结果或无筛选时直接显示
+                    results.forEach(({ tool }) => {
+                        const priceText = translations[currentLang].tool.price[tool.price] || '';
+                        const priceClass = {
+                            free: 'bg-green-500/20 text-green-400',
+                            paid: 'bg-red-500/20 text-red-400',
+                            freemium: 'bg-blue-500/20 text-blue-400',
+                            coming: 'bg-purple-500/20 text-purple-400'
+                        }[tool.price] || 'bg-gray-500/20 text-gray-400';
+                        
+                        html += `
+                            <a href="${tool.url}" target="_blank" class="block p-4 search-result-hover border-b border-gray-700 last:border-b-0 search-result-item">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <h4 class="font-semibold text-white flex items-center gap-2">
+                                            ${tool.name}
+                                            <span class="text-xs px-2 py-0.5 rounded ${priceClass}">${priceText}</span>
+                                        </h4>
+                                        <p class="text-sm text-gray-400 mt-1">
+                                            ⭐ ${tool.rating} · ${tool.features[currentLang].slice(0, 2).join(' · ')}
+                                        </p>
+                                    </div>
+                                    <span class="text-xs text-primary">${translations[currentLang].tool.visit} <i class="fa fa-external-link"></i></span>
+                                </div>
+                            </a>
+                        `;
+                    });
+                }
+                
+                searchResults.innerHTML = html;
+                
+                // 绑定自动补全建议点击事件
+                document.querySelectorAll('.suggestion-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        document.getElementById('searchInput').value = item.textContent.trim();
+                        document.getElementById('searchInput').dispatchEvent(new Event('input'));
+                    });
+                });
+                
+                // 绑定搜索结果内筛选事件
+                document.querySelectorAll('.filter-result-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        // 更新按钮状态
+                        document.querySelectorAll('.filter-result-btn').forEach(b => {
+                            b.classList.remove('filter-btn-active');
+                        });
+                        e.target.classList.add('filter-btn-active');
+                        
+                        const filter = e.target.dataset.filter;
+                        const resultItems = document.querySelectorAll('#filteredResultsContainer .search-result-item');
+                        
+                        resultItems.forEach(item => {
+                            if (filter === 'all' || item.dataset.price === filter) {
+                                item.style.display = 'block';
+                            } else {
+                                item.style.display = 'none';
+                            }
+                        });
+                    });
+                });
+                
+                // 绑定搜索结果点击事件（保存历史）
+                document.querySelectorAll('.search-result-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const term = document.getElementById('searchInput').value.trim();
+                        if (term) saveSearchHistory(term);
+                    });
+                });
+            }
+            
+            searchResults.classList.remove('hidden');
+        }
+
+        // 初始化搜索功能（添加防抖、键盘导航）
+        function initSearch() {
+            const searchInput = document.getElementById('searchInput');
+            const searchResults = document.getElementById('searchResults');
+            let debounceTimer;
+            
+            // 防抖处理（300ms延迟）
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    const query = e.target.value.trim().toLowerCase();
+                    if (query === '') {
+                        showHistoryAndHotSearches();
+                        return;
+                    }
+                    
+                    const results = searchTools(query);
+                    const suggestions = getAutocompleteSuggestions(query);
+                    renderSearchResults(results, suggestions);
+                }, 300);
+            });
+            
+            // 键盘导航支持
+            searchInput.addEventListener('keydown', (e) => {
+                const visibleItems = searchResults.querySelectorAll('.search-result-item, .suggestion-item, .history-item, .hot-search-item');
+                if (!visibleItems.length) return;
+                
+                let currentIndex = Array.from(visibleItems).findIndex(item => 
+                    item.classList.contains('highlighted')
+                );
+                
+                switch (e.key) {
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        currentIndex = (currentIndex + 1) % visibleItems.length;
+                        break;
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        currentIndex = (currentIndex - 1 + visibleItems.length) % visibleItems.length;
+                        break;
+                    case 'Enter':
+                        e.preventDefault();
+                        if (currentIndex >= 0) {
+                            visibleItems[currentIndex].click();
+                        }
+                        return;
+                    case 'Escape':
+                        searchResults.classList.add('hidden');
+                        return;
+                }
+                
+                visibleItems.forEach(item => item.classList.remove('highlighted'));
+                if (currentIndex >= 0) {
+                    visibleItems[currentIndex].classList.add('highlighted');
+                    visibleItems[currentIndex].scrollIntoView({ block: 'nearest' });
+                }
+            });
+            
+            // 点击外部关闭搜索结果
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('#searchInput') && !e.target.closest('#searchResults')) {
+                    searchResults.classList.add('hidden');
+                }
+            });
+        }
+
+        // 移动端菜单按钮
+        document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+            alert('Mobile menu will be implemented in next version');
+        });
+    </script>
+</body>
+</html>
